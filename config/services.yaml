@@ -1,0 +1,79 @@
+parameters:
+    api.accept_cors: '%env(APP_ACCEPT_CORS)%'
+    app.env: '%env(APP_ENV)%'
+    app.doc: '%env(APP_DOC)%'
+    app.salt_size: 6
+    app.salt_obfuscator: 3
+
+    app.password.min_length: 15
+    app.password.min_letters: 2
+    app.password.min_numbers: 2
+    app.password.min_special_chars: 2
+    app.password.min_strength: 5
+
+    app.token_generator.token_size: 150
+    app.token_generator.reset_token_size: 150
+    app.token_generator.access_token_hours: 4
+    app.token_generator.refresh_token_hours: 72
+    app.token_generator.email_validation_token_hours: 36
+    app.token_generator.reset_password_token_hours: 12
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    App\Controller\:
+        resource: '../src/Controller/'
+        tags: ['controller.service_arguments']
+
+    validation_exception_listener:
+        class: App\Listener\Domain\ValidationExceptionListener
+        autowire: true
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 99 }
+
+    cors_response_listener:
+        class: App\Listener\Domain\CorsResponseListener
+        arguments:
+            - "%api.accept_cors%"
+        tags:
+            - { name: kernel.event_listener, event: kernel.response, method: onKernelResponse, priority: 100 }
+
+    exception_listener:
+        class: App\Listener\Domain\ExceptionNotFoundListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 101 }
+
+    exception_api_listener:
+        class: App\Listener\Domain\ApiExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 95 }
+
+    exception_method_not_allowed_listener:
+        class: App\Listener\Domain\ExceptionMethodNotAllowedHttpListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 102 }
+
+    exception_malformed_json_listener:
+        class: App\Listener\Domain\ExceptionMalformedJsonListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 101 }
+
+    exception_doc_enable:
+        class: App\Listener\Domain\DocumentationListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 103 }
+
+    exception_access_denied:
+        class: App\Listener\Domain\AccessDeniedExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 104 }

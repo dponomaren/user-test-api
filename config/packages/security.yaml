@@ -1,0 +1,37 @@
+security:
+    encoders:
+        App\Entity\User:
+            algorithm: bcrypt
+            cost: 13
+
+    providers:
+        main_auth_provider:
+            entity:
+                class: App\Entity\User
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            anonymous: ~
+            logout: ~
+            stateless: true
+            guard:
+                authenticators:
+                    - App\Security\TokenAuthenticator
+
+    role_hierarchy:
+        ROLE_SUPER_ADMIN: ROLE_ADMIN
+        ROLE_ADMIN: ROLE_MANAGER
+        ROLE_MANAGER: ROLE_USER
+
+    access_control:
+        - { path: ^/api/auth/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/auth/register, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/auth/refresh, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/reset-password, roles: IS_AUTHENTICATED_ANONYMOUSLY, methods: [POST, PATCH] }
+        - { path: ^/, roles: IS_AUTHENTICATED_ANONYMOUSLY, methods: [OPTIONS] }
+        - { path: ^/_profiler, roles: IS_AUTHENTICATED_ANONYMOUSLY, methods: [OPTIONS, GET] }
+        - { path: ^/docs, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/, roles: ROLE_USER }
